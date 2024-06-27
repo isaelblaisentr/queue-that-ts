@@ -10,7 +10,7 @@ declare global {
 
 export interface GlobalVariableAdapter extends LocalStorageAdapter {
     save: (key: string, data: string) => void;
-    load: (key: string) => string | undefined;
+    load: (key: string) => string | null;
     remove: (key: string) => void;
     //type: string;
 }
@@ -32,10 +32,11 @@ export function createGlobalVariableAdapter(queueName: string): GlobalVariableAd
         }
     }
 
-    function load(key: string): string | undefined {
+    function load(key: string): string | null {
         if (window.__queueThat__) {
             return window.__queueThat__[key];
         }
+        return null;
     }
 
     function remove(key: string) {

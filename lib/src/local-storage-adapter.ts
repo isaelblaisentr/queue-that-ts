@@ -16,13 +16,13 @@ export interface LocalStorageAdapter {
     getBackoffTime: () => number;
     setErrorCount: (n: number) => void;
     setBackoffTime: (n: number) => void;
-    getActiveQueue: () => QueueItem | undefined;
+    getActiveQueue: () => QueueItem | null;
     setActiveQueue: (id: number) => void;
     clearActiveQueue: () => void;
     getQueueProcessing: () => boolean;
     setQueueProcessing: (isProcessing: boolean) => void;
     save: (key: string, data: string) => void;
-    load: (key: string) => string | undefined;
+    load: (key: string) => string | null;
     works: () => boolean;
     reset: () => void;
     remove: (key: string) => void;
@@ -90,12 +90,12 @@ export function createLocalStorageAdapter(queueName: string): LocalStorageAdapte
 
     function getErrorCount(): number {
         const count = adapter.load(errorCountKey);
-        return count === undefined ? 0 : Number(count);
+        return count === null ? 0 : Number(count);
     }
 
     function getBackoffTime(): number {
         const time = adapter.load(backoffTimeKey);
-        return time === undefined ? 0 : Number(time);
+        return time === null ? 0 : Number(time);
     }
 
     function setErrorCount(n: number) {
@@ -106,9 +106,9 @@ export function createLocalStorageAdapter(queueName: string): LocalStorageAdapte
         adapter.save(backoffTimeKey, n.toString());
     }
 
-    function getActiveQueue(): QueueItem | undefined {
+    function getActiveQueue(): QueueItem | null {
         const activeQueue = adapter.load(activeQueueKey);
-        return activeQueue === undefined ? undefined : JSON.parse(activeQueue);
+        return activeQueue === null ? null : JSON.parse(activeQueue);
     }
 
     function setActiveQueue(id: number) {
@@ -133,7 +133,9 @@ export function createLocalStorageAdapter(queueName: string): LocalStorageAdapte
             adapter.save('queue-that-works', 'anything');
             works = adapter.load('queue-that-works') === 'anything';
             adapter.remove('queue-that-works');
-        } catch (e) {}
+        } catch (e) {
+            console.error(e);
+        }
         return works;
     }
 
@@ -150,7 +152,7 @@ function save(key: string, data: string) {
     window.localStorage.setItem(key, data);
 }
 
-function load(key: string): string | undefined {
+function load(key: string): string | null {
     return window.localStorage.getItem(key);
 }
 
@@ -159,5 +161,5 @@ function remove(key: string) {
 }
 
 function now(): number {
-    return (new Date()).getTime();
+    return new Date().getTime();
 }

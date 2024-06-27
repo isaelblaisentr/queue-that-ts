@@ -35,13 +35,10 @@ export function createQueueThat(options: QueueThatOptions) {
         throw new Error('Active queue timeout must be greater than process timeout');
     }
 
-    let checkTimer: ReturnType<typeof setTimeout>,
-        processTimer: ReturnType<typeof setTimeout>,
-        newQueueTimer: ReturnType<typeof setTimeout>,
-        flushTimer: ReturnType<typeof setTimeout>;
+    let checkTimer: ReturnType<typeof setTimeout>, processTimer: ReturnType<typeof setTimeout>, newQueueTimer: ReturnType<typeof setTimeout>, flushTimer: ReturnType<typeof setTimeout>;
     let processingTasks = false;
     let checkScheduled = false;
-    let queueId = Math.random() + now();
+    const queueId = Math.random() + now();
     let flushScheduled = false;
     let destroyed = false;
 
@@ -55,11 +52,11 @@ export function createQueueThat(options: QueueThatOptions) {
         options,
         flush,
         destroy: () => {
-            destroyed = true
-            clearTimeout(checkTimer)
-            clearTimeout(processTimer)
-            clearTimeout(newQueueTimer)
-            clearTimeout(flushTimer)
+            destroyed = true;
+            clearTimeout(checkTimer);
+            clearTimeout(processTimer);
+            clearTimeout(newQueueTimer);
+            clearTimeout(flushTimer);
         },
         flushQueueCache: storageAdapter.flush,
         queueThat
@@ -92,7 +89,7 @@ export function createQueueThat(options: QueueThatOptions) {
         flushScheduled = true;
         clearTimeout(checkTimer);
 
-        flushTimer = setTimeout(function checkQueueAndReset() {
+        flushTimer = setTimeout(() => {
             checkQueue();
             checkScheduled = false;
             flushScheduled = false;
@@ -102,10 +99,10 @@ export function createQueueThat(options: QueueThatOptions) {
     function checkQueueDebounce() {
         if (checkScheduled) return;
         checkScheduled = true;
-        checkTimer = setTimeout(function checkQueueAndReset() {
+        checkTimer = setTimeout(() => {
             checkQueue();
             checkScheduled = false;
-        }, /*@Changes*/options.queueGroupTime ?? QUEUE_GROUP_TIME);
+        }, /*@Changes*/ options.queueGroupTime ?? QUEUE_GROUP_TIME);
     }
 
     function checkQueue() {
@@ -136,11 +133,11 @@ export function createQueueThat(options: QueueThatOptions) {
         if (batch.containsRepeatedItems) console.info('Batch contains repeated items');
         else console.info('Batch does not contain repeated items');*/
 
-        let itemsProcessing = batch.length;
+        const itemsProcessing = batch.length;
         let timeout = false;
         let finished = false;
 
-        options.process(batch, function (err) {
+        options.process(batch, err => {
             if (timeout || destroyed) return;
             processingTasks = false;
             finished = true;
@@ -162,7 +159,7 @@ export function createQueueThat(options: QueueThatOptions) {
             checkQueueDebounce();
         });
 
-        processTimer = setTimeout(function () {
+        processTimer = setTimeout(() => {
             if (finished || destroyed) return;
             timeout = true;
             processingTasks = false;
@@ -175,17 +172,17 @@ export function createQueueThat(options: QueueThatOptions) {
     }
 
     function processError(err: Error) {
-        console.error('Process error, backing off (' + err.message + ')')
+        console.error('Process error, backing off (' + err.message + ')');
         const errorCount = storageAdapter.getErrorCount() + 1;
         storageAdapter.setErrorCount(errorCount);
         storageAdapter.setBackoffTime(now() + options.backoffTime * Math.pow(2, errorCount - 1));
         console.warn('Backoff time ' + (storageAdapter.getBackoffTime() - now()) + 'ms');
     }
 
-    function getLastActiveQueueInfo() : { id: number | null, active: boolean}  {
+    function getLastActiveQueueInfo(): { id: number | null; active: boolean } {
         const activeInstance = storageAdapter.getActiveQueue();
-        console.log("activeInstance: ", activeInstance)
-        if (activeInstance === undefined || activeInstance === null) {
+        console.log('activeInstance: ', activeInstance);
+        if (activeInstance === null) {
             return { id: null, active: false };
         }
         const timeSinceActive = now() - activeInstance.ts;
@@ -196,7 +193,7 @@ export function createQueueThat(options: QueueThatOptions) {
     }
 
     function now() {
-        return (new Date()).getTime();
+        return new Date().getTime();
     }
 
     function deactivateOnUnload(queueId: number) {
@@ -210,7 +207,7 @@ export function createQueueThat(options: QueueThatOptions) {
             const activeQueue = storageAdapter.getActiveQueue();
             if (activeQueue && activeQueue.id === queueId) {
                 //@Changes
-                queueThatInstance.destroy()
+                queueThatInstance.destroy();
                 //queueThat.destroy();
                 storageAdapter.clearActiveQueue();
                 console.info('Deactivated on page unload');
